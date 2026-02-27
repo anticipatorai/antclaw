@@ -59,6 +59,7 @@ jobs:
 
       - name: Unit tests
         run: |
+          mkdir -p reports        
           pytest tests/ -v \
             --cov=antclaw \
             --cov-report=term-missing \
