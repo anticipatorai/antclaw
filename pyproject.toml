@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "anticlaw"
+name = "antclaw"
 version = "0.0.1"
 description = "Runtime security detection for OpenClaw agents"
 readme = "README.md"
@@ -31,8 +31,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/anticipatorai/anticlaw"
-Repository = "https://github.com/anticipatorai/anticlaw"
+Homepage = "https://github.com/anticipatorai/antclaw"
+Repository = "https://github.com/anticipatorai/antclaw"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
