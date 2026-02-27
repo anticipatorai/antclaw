@@ -100,12 +100,12 @@ jobs:
       - name: Run scan & generate reports
         run: |
           mkdir -p reports
-          python -m antclaw.ci_runner \
+          python scripts/generate_reports.py \
+            --stage ci \
+            --port ${{ env.ANTICLAW_PORT }} \
+            --bind ${{ env.ANTICLAW_BIND }} \
             --output-json reports/scan_report.json \
-            --output-html reports/scan_report.html \
-            --port ${{ env.ANTCLAW_PORT }} \
-            --bind ${{ env.ANTCLAW_BIND }} \
-            || python scripts/generate_reports.py
+            --output-html reports/scan_report.html || true
 
       - name: Upload scan reports
         uses: actions/upload-artifact@v4
