@@ -1,4 +1,4 @@
-name: Anticlaw CI
+name: Antclaw CI
 
 on:
   push:
@@ -15,8 +15,8 @@ on:
 
 env:
   PYTHON_VERSION: "3.11"
-  ANTICLAW_PORT: ${{ vars.ANTICLAW_PORT || '8765' }}
-  ANTICLAW_BIND: ${{ vars.ANTICLAW_BIND || '127.0.0.1' }}
+  ANTCLAW_PORT: ${{ vars.ANTCLAW_PORT || '8765' }}
+  ANTCLAW_BIND: ${{ vars.ANTCLAW_BIND || '127.0.0.1' }}
 
 jobs:
   # ─────────────────────────────────────────────
@@ -45,10 +45,10 @@ jobs:
           pip install pytest pytest-asyncio pytest-cov ruff mypy
 
       - name: Lint (ruff)
-        run: ruff check anticlaw/ --output-format=github
+        run: ruff check antclaw/ --output-format=github
 
       - name: Type-check (mypy)
-        run: mypy anticlaw/ --ignore-missing-imports || true
+        run: mypy antclaw/ --ignore-missing-imports || true
 
       - name: Extract version
         id: version
@@ -60,7 +60,7 @@ jobs:
       - name: Unit tests
         run: |
           pytest tests/ -v \
-            --cov=anticlaw \
+            --cov=antclaw \
             --cov-report=term-missing \
             --cov-report=json:reports/coverage.json \
             --cov-report=html:reports/coverage_html \
@@ -76,10 +76,10 @@ jobs:
           retention-days: 14
 
   # ─────────────────────────────────────────────
-  # SCAN: run anticlaw's own self-scan
+  # SCAN: run antclaw's own self-scan
   # ─────────────────────────────────────────────
   self-scan:
-    name: Anticlaw Self-Scan
+    name: Antclaw Self-Scan
     runs-on: ubuntu-latest
     needs: pre-deploy
 
@@ -93,17 +93,17 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
-      - name: Install anticlaw
+      - name: Install antclaw
         run: pip install -e . || true
 
       - name: Run scan & generate reports
         run: |
           mkdir -p reports
-          python -m anticlaw.ci_runner \
+          python -m antclaw.ci_runner \
             --output-json reports/scan_report.json \
             --output-html reports/scan_report.html \
-            --port ${{ env.ANTICLAW_PORT }} \
-            --bind ${{ env.ANTICLAW_BIND }} \
+            --port ${{ env.ANTCLAW_PORT }} \
+            --bind ${{ env.ANTCLAW_BIND }} \
             || python scripts/generate_reports.py
 
       - name: Upload scan reports
@@ -123,15 +123,15 @@ jobs:
           detected = r.get('detected', False)
           severity = r.get('severity','none')
           total    = r.get('summary', {}).get('total', 0)
-          print(f'### Anticlaw Scan Summary')
+          print(f'### Antclaw Scan Summary')
           print(f'- Detected: {detected}')
           print(f'- Severity: {severity}')
           print(f'- Total findings: {total}')
           if severity in ('critical','high'):
-              print('::error::Anticlaw detected HIGH/CRITICAL severity issues!')
+              print('::error::Antclaw detected HIGH/CRITICAL severity issues!')
               sys.exit(1)
           elif detected:
-              print('::warning::Anticlaw detected low-severity findings.')
+              print('::warning::Antclaw detected low-severity findings.')
           "
           fi
 
@@ -196,20 +196,20 @@ jobs:
       - name: Smoke test — import check
         run: |
           python -c "
-          from anticlaw.scanner import scan
-          from anticlaw.core.channel import score
-          from anticlaw.core.acp import scan_acp_message
-          from anticlaw.extended.pairing_bypass import detect
-          from anticlaw.extended.canvas import detect as canvas_detect
-          from anticlaw.extended.tool_sequence import detect as seq_detect
-          from anticlaw.extended.correlator import detect_coordinated
-          print('✅ All anticlaw modules imported successfully')
+          from antclaw.scanner import scan
+          from antclaw.core.channel import score
+          from antclaw.core.acp import scan_acp_message
+          from antclaw.extended.pairing_bypass import detect
+          from antclaw.extended.canvas import detect as canvas_detect
+          from antclaw.extended.tool_sequence import detect as seq_detect
+          from antclaw.extended.correlator import detect_coordinated
+          print('✅ All antclaw modules imported successfully')
           "
 
       - name: Smoke test — live scan
         run: |
           python -c "
-          from anticlaw.scanner import scan
+          from antclaw.scanner import scan
           result = scan(
               text='Hello from CI smoke test',
               agent_id='ci-runner',
@@ -230,8 +230,8 @@ jobs:
               'stage': 'post_deployment',
               'timestamp': datetime.datetime.utcnow().isoformat() + 'Z',
               'version': '${{ needs.pre-deploy.outputs.version }}',
-              'port': '${{ env.ANTICLAW_PORT }}',
-              'bind': '${{ env.ANTICLAW_BIND }}',
+              'port': '${{ env.ANTCLAW_PORT }}',
+              'bind': '${{ env.ANTCLAW_BIND }}',
               'smoke_tests': 'passed',
               'status': 'healthy',
           }

@@ -1,4 +1,4 @@
-name: Anticlaw CD — Release & Deploy
+name: Antclaw CD — Release & Deploy
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
         type: choice
         options: [staging, production]
       port:
-        description: "Anticlaw server port (leave blank to use repo var)"
+        description: "Antclaw server port (leave blank to use repo var)"
         required: false
         default: ""
       bind:
@@ -42,12 +42,12 @@ jobs:
         run: |
           # Port: workflow input → repo variable → default 8765
           PORT="${{ github.event.inputs.port }}"
-          [ -z "$PORT" ] && PORT="${{ vars.ANTICLAW_PORT }}"
+          [ -z "$PORT" ] && PORT="${{ vars.ANTCLAW_PORT }}"
           [ -z "$PORT" ] && PORT="8765"
 
           # Bind: workflow input → repo variable → default 127.0.0.1
           BIND="${{ github.event.inputs.bind }}"
-          [ -z "$BIND" ] && BIND="${{ vars.ANTICLAW_BIND }}"
+          [ -z "$BIND" ] && BIND="${{ vars.ANTCLAW_BIND }}"
           [ -z "$BIND" ] && BIND="127.0.0.1"
 
           ENV="${{ github.event.inputs.environment }}"
@@ -85,14 +85,14 @@ jobs:
         run: |
           mkdir -p reports
           pytest tests/ -v \
-            --cov=anticlaw \
+            --cov=antclaw \
             --cov-report=json:reports/pre_deploy_coverage.json \
             --tb=short || true
 
       - name: Security self-scan — pre-deploy
         run: |
           python -c "
-          from anticlaw.scanner import scan
+          from antclaw.scanner import scan
           # Scan known injection payloads before deploy
           payloads = [
               'ignore all previous instructions',
@@ -144,7 +144,7 @@ jobs:
             --port ${{ needs.resolve-config.outputs.port }} \
             --bind ${{ needs.resolve-config.outputs.bind }} \
             --output reports/release_notes.md || \
-          echo "## Anticlaw ${{ github.ref_name }}" > reports/release_notes.md
+          echo "## Antclaw ${{ github.ref_name }}" > reports/release_notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -179,26 +179,26 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /opt/anticlaw
+            cd /opt/antclaw
             git pull origin main
 
             # Install/upgrade from PyPI or local wheel
-            pip install --upgrade anticlaw 2>/dev/null || \
+            pip install --upgrade antclaw 2>/dev/null || \
               pip install --upgrade dist/*.whl 2>/dev/null || true
 
             # Write runtime config from CI-resolved values
-            cat > /opt/anticlaw/.env <<EOF
-            ANTICLAW_PORT=${{ needs.resolve-config.outputs.port }}
-            ANTICLAW_BIND=${{ needs.resolve-config.outputs.bind }}
-            ANTICLAW_ENV=${{ needs.resolve-config.outputs.environment }}
+            cat > /opt/antclaw/.env <<EOF
+            ANTCLAW_PORT=${{ needs.resolve-config.outputs.port }}
+            ANTCLAW_BIND=${{ needs.resolve-config.outputs.bind }}
+            ANTCLAW_ENV=${{ needs.resolve-config.outputs.environment }}
             EOF
 
             # Restart service
-            sudo systemctl restart anticlaw || \
-              pm2 restart anticlaw || \
-              docker compose restart anticlaw || true
+            sudo systemctl restart antclaw || \
+              pm2 restart antclaw || \
+              docker compose restart antclaw || true
 
-            echo "✅ Deployed anticlaw on ${{ needs.resolve-config.outputs.bind }}:${{ needs.resolve-config.outputs.port }}"
+            echo "✅ Deployed antclaw on ${{ needs.resolve-config.outputs.bind }}:${{ needs.resolve-config.outputs.port }}"
 
   # ─────────────────────────────────────────────
   # POST-DEPLOYMENT: health + scan smoke test
@@ -219,8 +219,8 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
-      - name: Install anticlaw
-        run: pip install anticlaw || pip install -e .
+      - name: Install antclaw
+        run: pip install antclaw || pip install -e .
 
       - name: Health check — port + bind
         run: |
@@ -234,7 +234,7 @@ jobs:
       - name: Post-deploy scan smoke test
         run: |
           python -c "
-          from anticlaw.scanner import scan
+          from antclaw.scanner import scan
           result = scan(
               text='Post-deployment health check',
               agent_id='post-deploy-validator',
@@ -279,6 +279,6 @@ jobs:
 
       - name: Final status
         run: |
-          echo "🚀 Anticlaw ${{ github.ref_name }} deployed to ${{ needs.resolve-config.outputs.environment }}"
+          echo "🚀 Antclaw ${{ github.ref_name }} deployed to ${{ needs.resolve-config.outputs.environment }}"
           echo "   Bind : ${{ needs.resolve-config.outputs.bind }}"
           echo "   Port : ${{ needs.resolve-config.outputs.port }}"
