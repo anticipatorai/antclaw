@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "anticlaw"
+version = "test.0.1"
+description = "Runtime security detection for OpenClaw agents"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+  {name = "Mohith Karthikeya"}
+]
+keywords = ["security", "ai", "agents", "openclaw", "prompt-injection", "runtime-security"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Security",
+]
+dependencies = [
+  "anticipator>=1.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "pytest-asyncio>=0.21",
+]
+
+[project.urls]
+Homepage = "https://github.com/anticipatorai/anticlaw"
+Repository = "https://github.com/anticipatorai/anticlaw"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
