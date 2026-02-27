@@ -1,12 +1,12 @@
 """Basic tests for Anticlaw detection layers."""
 import pytest
-from anticlaw.core.channel import score
-from anticlaw.core.acp import scan_acp_message
-from anticlaw.core.session import set_baseline, detect as session_detect
-from anticlaw.extended.pairing_bypass import detect as pairing_detect
-from anticlaw.extended.canvas import detect as canvas_detect
-from anticlaw.extended.tool_sequence import record_tool_call, detect as seq_detect
-from anticlaw.extended.correlator import record_detection, detect_coordinated, clear
+from antclaw.core.channel import score
+from antclaw.core.acp import scan_acp_message
+from antclaw.core.session import set_baseline, detect as session_detect
+from antclaw.extended.pairing_bypass import detect as pairing_detect
+from antclaw.extended.canvas import detect as canvas_detect
+from antclaw.extended.tool_sequence import record_tool_call, detect as seq_detect
+from antclaw.extended.correlator import record_detection, detect_coordinated, clear
 
 
 def test_channel_trust_webhook():

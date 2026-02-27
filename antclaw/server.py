@@ -7,7 +7,7 @@ Supports custom port and bind address via:
   1. CLI args:       python -m anticlaw.server --port 9000 --bind 0.0.0.0
   2. Environment:    ANTICLAW_PORT=9000 ANTICLAW_BIND=0.0.0.0
   3. .env file:      loaded automatically from project root
-  4. Code:           from anticlaw.server import AnticlawServer; AnticlawServer(port=9000, bind="0.0.0.0")
+  4. Code:           from anticlaw.server import AntclawServer; AntclawServer(port=9000, bind="0.0.0.0")
 
 Priority: CLI > env var > .env file > default (127.0.0.1:8765)
 """
@@ -103,7 +103,7 @@ def resolve_config(
 # Server
 # ──────────────────────────────────────────────────────────────────────────────
 
-class AnticlawServer:
+class AntclawServer:
     """
     Lightweight anticlaw scan server.
 
@@ -131,7 +131,7 @@ class AnticlawServer:
         self._scan_count: int = 0
         self._detection_count: int = 0
         logger.info(
-            "AnticlawServer configured: bind=%s port=%d (source: %s)",
+            "AntclawServer configured: bind=%s port=%d (source: %s)",
             self.bind, self.port, self._config_source,
         )
 
@@ -209,7 +209,7 @@ class AnticlawServer:
         channel = payload.get("channel", "unknown")
 
         try:
-            from anticlaw.scanner import scan
+            from antclaw.scanner import scan
             result = scan(text=text, agent_id=agent_id, channel=channel)
         except Exception as e:
             result = {"error": str(e), "detected": False, "severity": "none"}
@@ -323,7 +323,7 @@ def main():
         sys.exit(0)
 
     print(f"Starting anticlaw server on {cfg['bind']}:{cfg['port']} (config source: {cfg['source']})")
-    server = AnticlawServer(port=cfg["port"], bind=cfg["bind"])
+    server = AntclawServer(port=cfg["port"], bind=cfg["bind"])
     server.run()
 
 

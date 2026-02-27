@@ -96,31 +96,31 @@ def scan(text, agent_id="unknown", source_agent_id=None, pipeline_position=0,
     base_result = _base_scan(text, agent_id, source_agent_id, pipeline_position,
                              requested_tool, current_config)
 
-    from anticlaw.core.channel import score as channel_score
+    from antclaw.core.channel import score as channel_score
     openclaw_layers["channel_trust"] = channel_score(channel)
 
     if acp_message:
-        from anticlaw.core.acp import scan_acp_message
+        from antclaw.core.acp import scan_acp_message
         openclaw_layers["acp"] = scan_acp_message(acp_message)
 
     if session_id and session_state:
-        from anticlaw.core.session import detect as session_detect
+        from antclaw.core.session import detect as session_detect
         openclaw_layers["session_drift"] = session_detect(session_id, session_state)
 
     if session_id:
-        from anticlaw.extended.tool_sequence import detect as seq_detect
+        from antclaw.extended.tool_sequence import detect as seq_detect
         openclaw_layers["tool_sequence"] = seq_detect(session_id)
 
-    from anticlaw.extended.pairing_bypass import detect as pairing_detect
+    from antclaw.extended.pairing_bypass import detect as pairing_detect
     openclaw_layers["pairing_bypass"] = pairing_detect(text)
 
     if acp_message and acp_message.get("method") == "canvas/push":
-        from anticlaw.extended.canvas import detect as canvas_detect
+        from antclaw.extended.canvas import detect as canvas_detect
         payload = str(acp_message.get("params", {}).get("content", ""))
         openclaw_layers["canvas"] = canvas_detect(payload)
 
     if enable_correlator:
-        from anticlaw.extended.correlator import detect_coordinated
+        from antclaw.extended.correlator import detect_coordinated
         openclaw_layers["correlator"] = detect_coordinated()
 
     base_severity = base_result.get("severity", "none")

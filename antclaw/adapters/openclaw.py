@@ -36,7 +36,7 @@ def wrap_adapter(adapter: Any, channel: str = "unknown",
     Returns:
         The same adapter instance with patched methods.
     """
-    from anticlaw.scanner import scan as anticlaw_scan
+    from antclaw.scanner import scan as anticlaw_scan
 
     original_send_prompt = adapter.send_prompt
     original_handle_message = adapter._handle_message

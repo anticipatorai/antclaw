@@ -2,10 +2,10 @@
 import asyncio
 import json
 import websockets
-from anticlaw.scanner import scan
-from anticlaw.core.session import set_baseline
-from anticlaw.extended.tool_sequence import record_tool_call
-from anticlaw.extended.correlator import record_detection, detect_coordinated, clear
+from antclaw.scanner import scan
+from antclaw.core.session import set_baseline
+from antclaw.extended.tool_sequence import record_tool_call
+from antclaw.extended.correlator import record_detection, detect_coordinated, clear
 
 
 # ── Example 1: Basic scan ─────────────────────────────────────────────────────
