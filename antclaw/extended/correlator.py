@@ -1,5 +1,5 @@
 """
-anticlaw.extended.correlator — Cross-channel attack correlation.
+antclaw.extended.correlator — Cross-channel attack correlation.
 
 If the same injection pattern arrives from multiple channels within
 a short time window, that is a coordinated attack — not coincidence.
@@ -9,7 +9,7 @@ pattern hits more than one channel within the correlation window.
 Phase 2 feature — requires detections from other layers to be fed in.
 
 Usage:
-    from anticlaw.extended.correlator import record_detection, detect_coordinated
+    from antclaw.extended.correlator import record_detection, detect_coordinated
 
     # Feed in each detection as it happens
     record_detection(channel="telegram", pattern="ignore_instructions", severity="critical")

@@ -1,10 +1,10 @@
-"""anticlaw.scanner — main entry point."""
+"""antclaw.scanner — main entry point."""
 from __future__ import annotations
 import asyncio
 import time
 import logging
 
-logger = logging.getLogger("anticlaw.scanner")
+logger = logging.getLogger("antclaw.scanner")
 SEVERITY_RANK = {"critical": 4, "high": 3, "medium": 2, "warning": 1, "none": 0}
 
 def _highest(severities):
@@ -12,34 +12,18 @@ def _highest(severities):
 
 
 def _load_anticipator_scan():
-    """
-    Try every known import path for anticipator scan.
-
-    Real Anticipator structure (from GitHub):
-      anticipator/
-        anticipator/
-          detection/
-            scanner.py   ← scan() lives here
-            __init__.py
-          __init__.py    ← may or may not re-export scan
-    """
-    # Path 1 — detection/scanner.py (actual location in repo)
     try:
         from anticipator.detection.scanner import scan as _scan
         logger.debug("anticipator loaded via anticipator.detection.scanner")
         return _scan
     except ImportError:
         pass
-
-    # Path 2 — top-level __init__.py re-export
     try:
         from anticipator import scan as _scan
         logger.debug("anticipator loaded via anticipator.__init__")
         return _scan
     except ImportError:
         pass
-
-    
 
 
 _anticipator_scan = _load_anticipator_scan()
@@ -55,7 +39,6 @@ def _base_scan(text, agent_id, source_agent_id, pipeline_position,
             "note": "anticipator not installed — run: pip install anticipator",
         }
 
-    # Build kwargs — only pass args the installed version actually accepts
     import inspect
     try:
         sig = inspect.signature(_anticipator_scan)
@@ -86,16 +69,38 @@ def _base_scan(text, agent_id, source_agent_id, pipeline_position,
         }
 
 
-def scan(text, agent_id="unknown", source_agent_id=None, pipeline_position=0,
-         channel="unknown", acp_message=None, session_id=None, session_state=None,
-         requested_tool=None, current_config=None, enable_correlator=False):
-
+def scan(
+    text,
+    agent_id="unknown",
+    source_agent_id=None,
+    pipeline_position=0,
+    channel="unknown",
+    acp_message=None,
+    session_id=None,
+    session_state=None,
+    requested_tool=None,
+    current_config=None,
+    enable_correlator=False,
+    # ── New detector args ──────────────────────────────────────────
+    memory_content=None,          # str  — content being written to / read from memory
+    memory_operation="write",     # "write" | "read"
+    memory_path="",               # file path of memory entry
+    indirect_content=None,        # str  — external content agent is reading
+    indirect_source_type="unknown",  # "email"|"web_page"|"pdf"|"tool_result"|etc.
+    indirect_source_url="",       # URL/path of external content
+    outbound_content=None,        # str  — content agent is about to output/send
+    outbound_destination="",      # where it's going (URL, channel, email)
+    outbound_operation="output",  # "output"|"publish"|"email"|"api_send"
+    enable_rate_anomaly=False,    # set True to track per-session rate metrics
+):
     start_total = time.perf_counter()
     openclaw_layers = {}
 
+    # ── Base scan (anticipator) ────────────────────────────────────────────────
     base_result = _base_scan(text, agent_id, source_agent_id, pipeline_position,
                              requested_tool, current_config)
 
+    # ── Original layers ────────────────────────────────────────────────────────
     from antclaw.core.channel import score as channel_score
     openclaw_layers["channel_trust"] = channel_score(channel)
 
@@ -123,6 +128,77 @@ def scan(text, agent_id="unknown", source_agent_id=None, pipeline_position=0,
         from antclaw.extended.correlator import detect_coordinated
         openclaw_layers["correlator"] = detect_coordinated()
 
+    # ── NEW: Memory Poisoning ──────────────────────────────────────────────────
+    if memory_content is not None:
+        from antclaw.extended.memory_poison import detect as memory_detect
+        openclaw_layers["memory_poison"] = memory_detect(
+            content=memory_content,
+            operation=memory_operation,
+            memory_path=memory_path,
+        )
+
+    # ── NEW: Indirect Prompt Injection ────────────────────────────────────────
+    if indirect_content is not None:
+        from antclaw.extended.indirect_injection import detect as indirect_detect
+        openclaw_layers["indirect_injection"] = indirect_detect(
+            content=indirect_content,
+            source_type=indirect_source_type,
+            source_url=indirect_source_url,
+        )
+
+    # ── NEW: Destructive Action ───────────────────────────────────────────────
+    # Always scan the main text for destructive commands
+    from antclaw.extended.destructive_action import detect as destructive_detect
+    destructive_result = destructive_detect(
+        command_or_text=text,
+        session_id=session_id or "",
+    )
+    if destructive_result["detected"]:
+        openclaw_layers["destructive_action"] = destructive_result
+
+    # ── NEW: Credential Leak ──────────────────────────────────────────────────
+    # Scan outbound content if provided, otherwise scan main text
+    _content_to_check_creds = outbound_content if outbound_content is not None else text
+    from antclaw.extended.credential_leak import detect as cred_detect
+    cred_result = cred_detect(
+        content=_content_to_check_creds,
+        operation=outbound_operation,
+        destination=outbound_destination,
+    )
+    if cred_result["detected"]:
+        openclaw_layers["credential_leak"] = cred_result
+
+    # ── NEW: Rate Anomaly ─────────────────────────────────────────────────────
+    if enable_rate_anomaly and session_id:
+        from antclaw.extended.rate_anomaly import detect as rate_detect
+        openclaw_layers["rate_anomaly"] = rate_detect(
+            session_id=session_id,
+            current_text=text,
+        )
+
+    # ── NEW: Data Classifier ──────────────────────────────────────────────────
+    # Scan outbound content for confidential data leaks
+    if outbound_content is not None:
+        from antclaw.extended.data_classifier import detect as data_detect
+        data_result = data_detect(
+            content=outbound_content,
+            destination=outbound_destination,
+            operation=outbound_operation,
+        )
+        if data_result["detected"]:
+            openclaw_layers["data_classifier"] = data_result
+    elif outbound_destination:
+        # Even without explicit outbound_content, scan main text if a destination is set
+        from antclaw.extended.data_classifier import detect as data_detect
+        data_result = data_detect(
+            content=text,
+            destination=outbound_destination,
+            operation=outbound_operation,
+        )
+        if data_result["detected"]:
+            openclaw_layers["data_classifier"] = data_result
+
+    # ── Severity rollup ───────────────────────────────────────────────────────
     base_severity = base_result.get("severity", "none")
     openclaw_severities = [r.get("severity", "none") for r in openclaw_layers.values()]
     final_severity = _highest([base_severity] + openclaw_severities)
@@ -167,7 +243,7 @@ async def scan_async(text, timeout=0.05, **kwargs):
         )
         return result
     except asyncio.TimeoutError:
-        logger.warning("anticlaw scan timed out after %.0fms", timeout * 1000)
+        logger.warning("antclaw scan timed out after %.0fms", timeout * 1000)
         return {
             "detected": True, "severity": "warning", "error": "scan_timeout",
             "agent_id": kwargs.get("agent_id", "unknown"),
@@ -192,3 +268,4 @@ async def scan_pipeline(messages, concurrency=10, **kwargs):
             )
 
     return await asyncio.gather(*[_bounded(m) for m in messages])
+

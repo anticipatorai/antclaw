@@ -1,5 +1,5 @@
 """
-anticlaw.extended.pairing_bypass
+antclaw.extended.pairing_bypass
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 DM pairing bypass detection.
 

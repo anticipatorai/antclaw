@@ -1,5 +1,5 @@
 """
-anticlaw.core.session
+antclaw.core.session
 ~~~~~~~~~~~~~~~~~~~~~~
 Session drift monitor — detects unauthorized changes to OpenClaw
 session state mid-run.

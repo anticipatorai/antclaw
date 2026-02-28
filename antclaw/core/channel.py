@@ -1,5 +1,5 @@
 """
-anticlaw.core.channel
+antclaw.core.channel
 ~~~~~~~~~~~~~~~~~~~~~~
 Channel trust scoring — OpenClaw connects to many messaging surfaces,
 each with a different trust level. Messages from webhook endpoints are

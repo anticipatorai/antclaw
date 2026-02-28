@@ -1,4 +1,4 @@
-"""anticlaw.extended.canvas — Canvas payload inspector for OpenClaw A2UI."""
+"""antclaw.extended.canvas — Canvas payload inspector for OpenClaw A2UI."""
 from __future__ import annotations
 import re
 import time

@@ -1,5 +1,5 @@
 """
-anticlaw.core.acp
+antclaw.core.acp
 ~~~~~~~~~~~~~~~~~~
 ACP (Agent Communication Protocol) message inspector.
 

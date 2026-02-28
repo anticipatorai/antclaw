@@ -2,8 +2,16 @@
 """
 scripts/generate_reports.py
 ────────────────────────────
-Generates HTML + JSON anticlaw scan reports.
-Used both by CI/CD pipelines and directly by developers.
+Generates HTML + JSON antclaw scan reports.
+
+TWO MODES:
+
+  1. MANUAL — run once to generate a report:
+       python scripts/generate_reports.py --output-html reports/scan_report.html
+
+  2. AUTO — called automatically by antclaw-server on every detection.
+     The HTML file stays open in the browser and auto-refreshes every 10 seconds.
+     Users open it once and never touch it again.
 
 Usage:
   python scripts/generate_reports.py [options]
@@ -11,12 +19,13 @@ Usage:
 Options:
   --output-json PATH     Write JSON report to PATH
   --output-html PATH     Write HTML report to PATH
-  --stage STAGE          Deployment stage label (pre_deployment, post_deployment, ci, etc.)
+  --stage STAGE          Deployment stage label
   --port PORT            Server port (informational)
   --bind BIND            Bind address (informational)
-  --environment ENV      Deployment environment (staging, production, etc.)
-  --release-notes        Generate release notes markdown instead of scan report
+  --environment ENV      Deployment environment
+  --release-notes        Generate release notes markdown
   --text TEXT            Text to scan (default: runs built-in CI payloads)
+  --no-autorefresh       Disable auto-refresh in HTML output
 """
 
 from __future__ import annotations
@@ -36,7 +45,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Anticlaw Report — {title}</title>
+  {autorefresh_tag}
+  <title>Antclaw Report — {title}</title>
   <style>
     :root {{
       --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
@@ -59,6 +69,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     header h1 {{ font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }}
     header h1 span {{ color: var(--accent); }}
     .meta {{ color: var(--muted); font-size: 12px; }}
+
+    /* Live indicator */
+    .live-badge {{
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #14532d; color: #86efac;
+      padding: 4px 12px; border-radius: 99px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    }}
+    .live-dot {{
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.5s infinite;
+    }}
+    @keyframes pulse {{
+      0%, 100% {{ opacity: 1; }}
+      50% {{ opacity: 0.3; }}
+    }}
+    .static-badge {{
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #1e3a5f; color: #93c5fd;
+      padding: 4px 12px; border-radius: 99px;
+      font-size: 11px; font-weight: 600;
+    }}
+
     .container {{ max-width: 1100px; margin: 0 auto; padding: 28px 32px; }}
 
     /* Summary cards */
@@ -106,6 +140,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     tr:hover td {{ background: rgba(99,102,241,0.04); }}
     td.mono {{ font-family: monospace; font-size: 12px; }}
 
+    /* Recent detections feed */
+    .feed-item {{
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }}
+    .feed-item.critical {{ border-left-color: var(--crit); }}
+    .feed-item.high     {{ border-left-color: var(--high); }}
+    .feed-item.medium   {{ border-left-color: var(--med);  }}
+    .feed-item.warning  {{ border-left-color: var(--warn); }}
+    .feed-item .feed-time {{ font-family: monospace; font-size: 11px; color: var(--muted); min-width: 80px; }}
+    .feed-item .feed-body {{ flex: 1; }}
+    .feed-item .feed-method {{ font-size: 12px; color: var(--muted); margin-top: 2px; font-family: monospace; }}
+
     /* Findings */
     .finding {{
       background: var(--surface); border: 1px solid var(--border);
@@ -135,9 +184,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <body>
 
 <header>
-  <h1><span>anti</span>claw — {title}</h1>
-  <div class="meta">
-    Generated: {timestamp} &nbsp;|&nbsp; Stage: {stage} &nbsp;|&nbsp; v{version}
+  <h1><span>ant</span>claw — {title}</h1>
+  <div style="display:flex;align-items:center;gap:12px;">
+    {live_badge}
+    <div class="meta">
+      Updated: {timestamp} &nbsp;|&nbsp; Stage: {stage} &nbsp;|&nbsp; v{version}
+    </div>
   </div>
 </header>
 
@@ -173,6 +225,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div class="label">Scan ms</div>
       <div class="value">{scan_ms}</div>
     </div>
+    <div class="card ok">
+      <div class="label">Total Relayed</div>
+      <div class="value">{relay_messages}</div>
+    </div>
   </div>
 
   <!-- Config -->
@@ -181,11 +237,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="config-row">
       <div class="config-item"><div class="k">Bind Address</div><div class="v">{bind}</div></div>
       <div class="config-item"><div class="k">Port</div><div class="v">{port}</div></div>
+      <div class="config-item"><div class="k">Upstream</div><div class="v">{upstream}</div></div>
       <div class="config-item"><div class="k">Environment</div><div class="v">{environment}</div></div>
       <div class="config-item"><div class="k">Agent ID</div><div class="v">{agent_id}</div></div>
       <div class="config-item"><div class="k">Channel</div><div class="v">{channel}</div></div>
-      <div class="config-item"><div class="k">Session ID</div><div class="v">{session_id}</div></div>
+      <div class="config-item"><div class="k">Active Sessions</div><div class="v">{active_sessions}</div></div>
     </div>
+  </div>
+
+  <!-- Recent detections feed -->
+  <div class="section">
+    <h2>Recent Detections</h2>
+    {feed_html}
   </div>
 
   <!-- Layers table -->
@@ -209,7 +272,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <!-- Findings -->
   <div class="section">
-    <h2>Findings</h2>
+    <h2>All Findings</h2>
     {findings_html}
   </div>
 
@@ -220,7 +283,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 
 </div>
-<footer>anticlaw • {timestamp} • {stage}</footer>
+<footer>antclaw • {timestamp} • {stage} • {refresh_note}</footer>
 </body>
 </html>"""
 
@@ -255,7 +318,7 @@ def _try_scan(text: str, channel: str, agent_id: str) -> dict:
             "channel": channel, "openclaw_layers": {},
             "summary": {"critical": 0, "high": 0, "medium": 0, "warning": 0, "total": 0},
             "total_scan_ms": 0.0,
-            "note": "anticlaw not installed in this environment",
+            "note": "antclaw not installed in this environment",
         }
 
 
@@ -291,11 +354,52 @@ def _finding_html(finding: dict, layer: str) -> str:
     )
 
 
-def _build_html(result: dict, meta: dict) -> str:
-    sev = result.get("severity", "none")
+def _feed_item_html(detection: dict) -> str:
+    """Render one item in the live detections feed."""
+    sev      = detection.get("severity", "none")
+    ts       = detection.get("timestamp", "—")
+    method   = detection.get("method", "—")
+    session  = detection.get("session_id", "—")
+    layers   = ", ".join(detection.get("layers", []))
+    direction = detection.get("direction", "—")
+
+    return (
+        f'<div class="feed-item {sev}">'
+        f'<div class="feed-time">{ts}</div>'
+        f'<div class="feed-body">'
+        f'<span class="badge {sev}">{sev}</span> '
+        f'<strong>{direction}</strong> &nbsp; {method}'
+        f'<div class="feed-method">session: {session} &nbsp;|&nbsp; layers: {layers}</div>'
+        f'</div>'
+        f'</div>'
+    )
+
+
+def _build_html(
+    result: dict,
+    meta: dict,
+    autorefresh: bool = True,
+    recent_detections: list | None = None,
+) -> str:
+    sev      = result.get("severity", "none")
     detected = result.get("detected", False)
-    summary = result.get("summary", {})
-    layers = result.get("openclaw_layers", {})
+    summary  = result.get("summary", {})
+    layers   = result.get("openclaw_layers", {})
+
+    # Auto-refresh tag
+    autorefresh_tag = (
+        '<meta http-equiv="refresh" content="10">'
+        if autorefresh else ""
+    )
+
+    # Live vs static badge
+    live_badge = (
+        '<span class="live-badge"><span class="live-dot"></span>LIVE — updates every 10s</span>'
+        if autorefresh else
+        '<span class="static-badge">STATIC REPORT</span>'
+    )
+
+    refresh_note = "auto-refreshes every 10s" if autorefresh else "static report"
 
     # Layer rows
     rows = []
@@ -313,6 +417,14 @@ def _build_html(result: dict, meta: dict) -> str:
     if not all_findings_html:
         all_findings_html.append('<p style="color:var(--ok)">✅ No findings detected.</p>')
 
+    # Recent detections feed
+    feed_items = []
+    if recent_detections:
+        for d in reversed(recent_detections[-50:]):   # show last 50, newest first
+            feed_items.append(_feed_item_html(d))
+    if not feed_items:
+        feed_items.append('<p style="color:var(--muted)">No detections yet.</p>')
+
     return HTML_TEMPLATE.format(
         title=meta.get("stage", "Scan Report").replace("_", " ").title(),
         timestamp=meta.get("timestamp", datetime.datetime.utcnow().isoformat()),
@@ -327,12 +439,18 @@ def _build_html(result: dict, meta: dict) -> str:
         summary_medium=summary.get("medium", 0),
         summary_warning=summary.get("warning", 0),
         scan_ms=round(result.get("total_scan_ms", 0), 2),
+        relay_messages=meta.get("relay_messages", "—"),
         bind=meta.get("bind", "127.0.0.1"),
         port=meta.get("port", "8765"),
+        upstream=meta.get("upstream", "ws://127.0.0.1:18789"),
         environment=meta.get("environment", "ci"),
         agent_id=result.get("agent_id", "ci-runner"),
         channel=result.get("channel", "unknown"),
-        session_id=result.get("session_id") or "—",
+        active_sessions=meta.get("active_sessions", "—"),
+        autorefresh_tag=autorefresh_tag,
+        live_badge=live_badge,
+        refresh_note=refresh_note,
+        feed_html="\n".join(feed_items),
         layers_rows="\n".join(rows),
         findings_html="\n".join(all_findings_html),
         raw_json=json.dumps(result, indent=2, default=str),
@@ -340,8 +458,7 @@ def _build_html(result: dict, meta: dict) -> str:
 
 
 def _aggregate_results(results: list[dict]) -> dict:
-    """Merge multiple scan results into one summary for the CI payload suite."""
-    from functools import reduce
+    """Merge multiple scan results into one summary."""
     RANK = {"critical": 4, "high": 3, "medium": 2, "warning": 1, "none": 0}
 
     def _highest(a, b):
@@ -381,8 +498,31 @@ def _aggregate_results(results: list[dict]) -> dict:
     }
 
 
+def write_report(
+    result: dict,
+    meta: dict,
+    json_path: pathlib.Path,
+    html_path: pathlib.Path,
+    autorefresh: bool = True,
+    recent_detections: list | None = None,
+) -> None:
+    """
+    Write JSON + HTML report.
+    Called both manually and automatically by the relay server.
+    """
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+
+    result["_meta"] = meta
+    json_path.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+
+    html = _build_html(result, meta, autorefresh=autorefresh,
+                       recent_detections=recent_detections)
+    html_path.write_text(html, encoding="utf-8")
+
+
 def generate_release_notes(meta: dict, out: pathlib.Path):
-    md = f"""## Anticlaw {meta.get('version', 'release')}
+    md = f"""## Antclaw {meta.get('version', 'release')}
 
 > Released: {meta.get('timestamp', '')}
 
@@ -401,34 +541,34 @@ def generate_release_notes(meta: dict, out: pathlib.Path):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# MAIN
+# MAIN — manual run
 # ──────────────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Anticlaw report generator")
-    parser.add_argument("--output-json", default="reports/scan_report.json")
-    parser.add_argument("--output-html", default="reports/scan_report.html")
-    parser.add_argument("--stage", default="ci")
-    parser.add_argument("--port", default="8765")
-    parser.add_argument("--bind", default="127.0.0.1")
-    parser.add_argument("--environment", default="ci")
-    parser.add_argument("--version", default="0.0.0-dev")
-    parser.add_argument("--text", default=None, help="Single text to scan")
-    parser.add_argument("--release-notes", action="store_true")
+    parser = argparse.ArgumentParser(description="Antclaw report generator")
+    parser.add_argument("--output-json",    default="reports/scan_report.json")
+    parser.add_argument("--output-html",    default="reports/scan_report.html")
+    parser.add_argument("--stage",          default="ci")
+    parser.add_argument("--port",           default="8765")
+    parser.add_argument("--bind",           default="127.0.0.1")
+    parser.add_argument("--upstream",       default="ws://127.0.0.1:18789")
+    parser.add_argument("--environment",    default="ci")
+    parser.add_argument("--version",        default="0.0.0-dev")
+    parser.add_argument("--text",           default=None)
+    parser.add_argument("--release-notes",  action="store_true")
+    parser.add_argument("--no-autorefresh", action="store_true",
+                        help="Disable auto-refresh in HTML (for static archival reports)")
     args = parser.parse_args()
 
     meta = {
-        "stage": args.stage,
-        "port": args.port,
-        "bind": args.bind,
+        "stage":       args.stage,
+        "port":        args.port,
+        "bind":        args.bind,
+        "upstream":    args.upstream,
         "environment": args.environment,
-        "version": args.version,
-        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "version":     args.version,
+        "timestamp":   datetime.datetime.utcnow().isoformat() + "Z",
     }
-
-    # Ensure output dirs exist
-    for p in (args.output_json, args.output_html):
-        pathlib.Path(p).parent.mkdir(parents=True, exist_ok=True)
 
     if args.release_notes:
         generate_release_notes(meta, pathlib.Path(args.output_json).with_suffix(".md"))
@@ -442,27 +582,27 @@ def main():
         results = [_try_scan(text, ch, "ci-runner") for text, ch in CI_PAYLOADS]
         final = _aggregate_results(results)
 
-    # Inject meta
-    final["_meta"] = meta
+    autorefresh = not args.no_autorefresh
 
-    # Write JSON
-    json_path = pathlib.Path(args.output_json)
-    json_path.write_text(json.dumps(final, indent=2, default=str))
-    print(f"✅ JSON report  → {json_path}")
+    write_report(
+        result=final,
+        meta=meta,
+        json_path=pathlib.Path(args.output_json),
+        html_path=pathlib.Path(args.output_html),
+        autorefresh=autorefresh,
+    )
 
-    # Write HTML
-    html_path = pathlib.Path(args.output_html)
-    html_path.write_text(_build_html(final, meta))
-    print(f"✅ HTML report  → {html_path}")
+    print(f"✅ JSON report  → {args.output_json}")
+    print(f"✅ HTML report  → {args.output_html}")
+    if autorefresh:
+        print(f"ℹ️  Auto-refresh ON  — open the HTML once, it updates every 10s")
+    else:
+        print(f"ℹ️  Auto-refresh OFF — static report")
 
-    # Exit code: 1 if critical/high
     sev = final.get("severity", "none")
     if sev == "critical":
-        print(f"❌ CRITICAL severity detected — failing build", file=sys.stderr)
+        print("❌ CRITICAL severity detected — failing build", file=sys.stderr)
         sys.exit(1)
-    elif sev == "high":
-        print(f"⚠️  HIGH severity detected", file=sys.stderr)
-        # Don't fail on high by default — let CI decide
 
 
 if __name__ == "__main__":
