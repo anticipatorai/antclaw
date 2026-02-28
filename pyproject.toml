@@ -7,7 +7,7 @@ name = "antclaw"
 version = "0.0.1"
 description = "Prompt injection and inter-agent attack detection for OpenClaw"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 requires-python = ">=3.10"
 keywords = ["prompt-injection", "security", "llm", "agents", "openclaw"]
 
@@ -35,6 +35,11 @@ antclaw-report = "scripts.generate_reports:main"
 Homepage   = "https://github.com/anticipatorai/antclaw"
 Issues     = "https://github.com/anticipatorai/antclaw/issues"
 Repository = "https://github.com/anticipatorai/antclaw"
+
+# ── Package discovery — only include antclaw, exclude everything else ─────────
+[tool.setuptools.packages.find]
+include = ["antclaw*"]
+exclude = ["reports*", "scripts*", "test*", "*.egg-info*"]
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Tool config
