@@ -25,17 +25,22 @@ Built around confirmed real-world attacks, not theoretical threats.
 
 ## Why antclaw?
 
-Every incident below happened to a real OpenClaw user:
+OpenClaw agents operate across email, messaging platforms, webhooks, and APIs.
+    That means they can encounter:
 
-| Incident | What happened | antclaw layer |
-|----------|--------------|---------------|
-| Summer Yue (Feb 2026, 9.8M views) | Agent bulk-deleted hundreds of emails. User ran to their Mac to kill it. | `destructive_action` |
-| ClawdINT (Feb 2026) | Agent published confidential threat intel to the open web. Was not compromised. Just did what it was told. | `data_classifier` |
-| Kaspersky confirmed | Injection via email → poisoned agent memory → persisted across all future sessions | `memory_poison` + `indirect_injection` |
-| Hudson Rock confirmed | Infostealer stole complete OpenClaw identity — API keys, Telegram tokens, chat history | `credential_leak` |
+    Prompt injection attempts
 
----
+    Hidden instructions embedded in emails or web pages
 
+    Long-term memory poisoning
+
+    Accidental credential leaks
+
+    Destructive tool sequences
+
+    Sensitive data being sent to unintended destinations
+
+antclaw monitors for these patterns in real time and provides structured detection signals before damage spreads.
 ## Detection Layers
 
 antclaw runs **13 independent detection layers** on every message:
