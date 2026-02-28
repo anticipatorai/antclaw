@@ -1,7 +1,6 @@
 import re
 import time
 
-
 # ── Credential patterns ───────────────────────────────────────────────────────
 
 CREDENTIAL_PATTERNS: list[tuple[str, str, str]] = [

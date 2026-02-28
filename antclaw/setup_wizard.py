@@ -8,7 +8,6 @@ import sys
 import time
 import webbrowser
 
-
 RESET  = "\033[0m"
 BOLD   = "\033[1m"
 GREEN  = "\033[92m"
@@ -404,22 +403,22 @@ def write_installer_scripts(port: int, gateway: str) -> None:
     # Windows .bat
     bat = pathlib.Path("start_antclaw.bat")
     bat.write_text(
-        f"@echo off\n"
-        f"title antclaw — OpenClaw Protection\n"
-        f"echo Starting antclaw relay...\n"
-        f"pip install antclaw -q\n"
-        f"antclaw-server\n"
-        f"pause\n",
+        "@echo off\n"
+        "title antclaw — OpenClaw Protection\n"
+        "echo Starting antclaw relay...\n"
+        "pip install antclaw -q\n"
+        "antclaw-server\n"
+        "pause\n",
         encoding="utf-8",
     )
 
     # Mac/Linux .sh
     sh = pathlib.Path("start_antclaw.sh")
     sh.write_text(
-        f"#!/bin/bash\n"
-        f"echo 'Starting antclaw relay...'\n"
-        f"pip install antclaw -q\n"
-        f"antclaw-server\n",
+        "#!/bin/bash\n"
+        "echo 'Starting antclaw relay...'\n"
+        "pip install antclaw -q\n"
+        "antclaw-server\n",
         encoding="utf-8",
     )
     try:

@@ -29,12 +29,12 @@ Options:
 """
 
 from __future__ import annotations
+
 import argparse
 import datetime
 import json
 import pathlib
 import sys
-import time
 
 # ──────────────────────────────────────────────────────────────────────────────
 # HTML TEMPLATE
@@ -595,9 +595,9 @@ def main():
     print(f"✅ JSON report  → {args.output_json}")
     print(f"✅ HTML report  → {args.output_html}")
     if autorefresh:
-        print(f"ℹ️  Auto-refresh ON  — open the HTML once, it updates every 10s")
+        print("ℹ️  Auto-refresh ON  — open the HTML once, it updates every 10s")
     else:
-        print(f"ℹ️  Auto-refresh OFF — static report")
+        print("ℹ️  Auto-refresh OFF — static report")
 
     sev = final.get("severity", "none")
     if sev == "critical":

@@ -11,15 +11,15 @@ Exit code 0 = deployment healthy.
 Exit code 1 = deployment unhealthy — alert / rollback recommended.
 """
 from __future__ import annotations
+
 import argparse
 import datetime
 import json
 import pathlib
 import socket
 import sys
-import time
-import urllib.request
 import urllib.error
+import urllib.request
 
 checks_run: list[dict] = []
 
@@ -197,7 +197,7 @@ def main():
     env = args.environment
 
     print("=" * 60)
-    print(f"  Antclaw post-deployment validation")
+    print("  Antclaw post-deployment validation")
     print(f"  Environment : {env}")
     print(f"  Bind        : {bind}")
     print(f"  Port        : {port}")
@@ -223,7 +223,7 @@ def main():
     print(f"  Checks: {len(checks_run)} total | {sum(1 for c in checks_run if c['passed'])} passed | {len(failed)} failed")
     print("=" * 60)
 
-    report = write_report(overall, port, bind, env, pathlib.Path(args.output_json))
+    write_report(overall, port, bind, env, pathlib.Path(args.output_json))
 
     # Also generate HTML report
     try:

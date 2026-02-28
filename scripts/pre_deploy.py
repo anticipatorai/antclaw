@@ -12,6 +12,7 @@ Exit code 1 = critical issues found — block deployment.
 Exit code 2 = warnings found — deployment allowed but flagged.
 """
 from __future__ import annotations
+
 import argparse
 import datetime
 import json
@@ -203,7 +204,7 @@ def main():
     bind = cfg["bind"]
 
     print("=" * 60)
-    print(f"  Antclaw pre-deployment checks")
+    print("  Antclaw pre-deployment checks")
     print(f"  Bind: {bind}  Port: {port}")
     print("=" * 60)
 
