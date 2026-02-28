@@ -1,3 +1,4 @@
+import importlib
 import json
 import os
 import pathlib
@@ -8,7 +9,6 @@ import sys
 import time
 import webbrowser
 
-# ── Terminal colours (work on Windows 10+ and all Unix) ──────────────────────
 
 RESET  = "\033[0m"
 BOLD   = "\033[1m"
@@ -89,8 +89,9 @@ def check_installation() -> bool:
 
     # websockets (needed for relay)
     try:
-        import websockets
-        ok(f"websockets installed ✓")
+        import importlib.util
+        if importlib.util.find_spec("websockets"):
+            ok(f"websockets installed ✓")
     except ImportError:
         warn("websockets not installed — installing now...")
         try:
@@ -201,7 +202,7 @@ def find_openclaw_gateway() -> str:
         return probed
 
     # 3. Fall back to default
-    warn(f"Could not auto-detect OpenClaw gateway")
+    warn("Could not auto-detect OpenClaw gateway")
     info(f"Using default: {_c(_DEFAULT_GATEWAY, CYAN)}")
     info("If this is wrong, edit the .env file after setup")
     return _DEFAULT_GATEWAY

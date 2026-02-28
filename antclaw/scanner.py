@@ -1,6 +1,6 @@
 import asyncio
-import time
 import logging
+import time
 
 logger = logging.getLogger("antclaw.scanner")
 SEVERITY_RANK = {"critical": 4, "high": 3, "medium": 2, "warning": 1, "none": 0}

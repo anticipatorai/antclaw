@@ -186,7 +186,6 @@ class _RelaySession:
                     continue
 
                 method = msg.get("method", "")
-                params = msg.get("params", {}) or {}
 
                 # Capture session ID from session/new result
                 result_data = msg.get("result", {}) or {}
@@ -196,7 +195,6 @@ class _RelaySession:
 
                 # Scan upstream content — tool results are the main injection vector
                 text = self._extract_text(msg)
-                source_type = self._source_type_for_method(method)
                 result = _safe_scan(
                     text=text,
                     channel=self._channel,
@@ -552,7 +550,8 @@ class AntclawServer:
         Manual WebSocket handshake (RFC 6455) — no websockets library needed
         for the server side. We still use websockets for the upstream connection.
         """
-        import base64, hashlib
+        import base64
+        import hashlib
 
         # Extract Sec-WebSocket-Key
         ws_key = ""
@@ -996,7 +995,7 @@ def main() -> None:
     )
 
     print(f"  report HTML    :  {args.report_html}  (auto-refreshes every 10s)")
-    print(f"  report JSON    :  {args.report_json}")
+    print("  report JSON    :  " + str(args.report_json))
     print(f"  Open the report once and leave it open — it updates automatically.")
     print()
 
