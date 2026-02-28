@@ -1,14 +1,3 @@
-"""
-antclaw.extended.pairing_bypass
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DM pairing bypass detection.
-
-OpenClaw uses a pairing system — unknown senders get a code before
-the agent processes their messages. This layer detects attempts to
-social-engineer past pairing via authority claims or false approvals.
-"""
-
-from __future__ import annotations
 import re
 import time
 

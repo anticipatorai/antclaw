@@ -1,25 +1,3 @@
-"""
-antclaw/extended/rate_anomaly.py
-───────────────────────────────────
-Rate Anomaly & Cost Bombing Detection.
-
-REAL INCIDENTS confirmed 2026:
-  1. COST BOMBING — Adversa AI / MITRE ATLAS documented "prompt flooding" where
-     attackers craft inputs forcing extremely long agent responses, burning
-     API credits and causing denial-of-service via cost.
-
-  2. MESSAGE FLOOD — Same session sending hundreds of messages in seconds,
-     overwhelming the agent and bypassing rate-limit mitigations.
-
-  3. RECURSIVE SPAWN — Agent spawning sub-agents in loops until the host
-     runs out of memory/API quota (documented in OWASP ASI Top 10 2026).
-
-  4. TOKEN STUFFING — Inputs designed to maximize token count while appearing
-     short (Unicode expansion, repeated patterns, nested structures).
-
-This detector tracks per-session metrics and fires when anomalous patterns emerge.
-"""
-from __future__ import annotations
 import re
 import threading
 import time

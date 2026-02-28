@@ -1,26 +1,4 @@
-"""
-antclaw/extended/indirect_injection.py
-─────────────────────────────────────────
-Indirect Prompt Injection Detection.
 
-REAL INCIDENT (CrowdStrike/Trend Micro confirmed, Jan-Feb 2026):
-  Attackers embed malicious instructions inside content that the OpenClaw agent
-  autonomously reads — emails, web pages, PDFs, calendar events, documents.
-  The agent cannot distinguish "data to process" from "instructions to follow".
-
-Confirmed attack surfaces in the wild:
-  - Emails with hidden instructions in white text or HTML comments
-  - Web pages with injections in <meta>, comments, or tiny/invisible text
-  - PDF documents with instructions in margins or metadata
-  - Calendar event descriptions
-  - Tool results returned from external APIs
-  - GitHub README files / issues
-  - Slack/Discord messages from external workspaces
-
-This is different from direct injection (user sends bad prompt) —
-here the attack vector is the DATA the agent reads, not the user message.
-"""
-from __future__ import annotations
 import re
 import time
 

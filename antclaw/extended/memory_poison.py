@@ -1,24 +1,3 @@
-"""
-antclaw/extended/memory_poison.py
-────────────────────────────────────
-Memory Poisoning Detection — based on confirmed real-world OpenClaw incidents.
-
-REAL INCIDENT: Kaspersky/Trend Micro confirmed that a single successful prompt
-injection can poison OpenClaw's persistent memory (stored as local Markdown files),
-influencing agent behaviour across ALL future sessions indefinitely.
-
-Attack flow confirmed in wild:
-  1. Attacker sends injection via email/web page/tool result
-  2. Agent saves a "key takeaway" containing malicious instruction to memory
-  3. Every future session reads the poisoned memory → attacker has persistent control
-
-This detector scans:
-  - Content being written TO memory (outbound memory writes)
-  - Content being READ FROM memory (inbound memory reads)
-  - Memory file paths for suspicious entries
-  - Instruction-like patterns in memory content that shouldn't be there
-"""
-from __future__ import annotations
 import re
 import time
 

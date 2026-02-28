@@ -1,28 +1,3 @@
-"""
-antclaw/server.py
-───────────────────
-Antclaw WebSocket relay + HTTP health server.
-
-TWO MODES in one process:
-  1. HTTP server  — /health  /ready  /metrics  /scan (POST)
-  2. WS relay     — sits between OpenClaw and the real gateway,
-                    scans every ACP message in both directions
-
-Normal users (no code required):
-  1. pip install antclaw
-  2. antclaw-server --upstream ws://127.0.0.1:18789
-  3. In OpenClaw settings → change gateway URL to ws://127.0.0.1:8765
-
-Config priority: CLI > env var > .env file > defaults
-
-  ANTCLAW_PORT      relay + HTTP port          (default 8765)
-  ANTCLAW_BIND      bind address               (default 127.0.0.1)
-  ANTCLAW_UPSTREAM  real OpenClaw gateway URL  (default ws://127.0.0.1:18789)
-  ANTCLAW_TOKEN     bearer token for upstream  (optional)
-"""
-
-from __future__ import annotations
-
 import argparse
 import asyncio
 import json

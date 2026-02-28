@@ -1,11 +1,3 @@
-"""
-antclaw.core.session
-~~~~~~~~~~~~~~~~~~~~~~
-Session drift monitor — detects unauthorized changes to OpenClaw
-session state mid-run.
-"""
-
-from __future__ import annotations
 import copy
 import threading
 import time

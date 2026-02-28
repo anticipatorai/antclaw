@@ -1,28 +1,4 @@
-"""
-antclaw/extended/data_classifier.py
-──────────────────────────────────────
-Confidential Data Classifier & Leak Prevention.
 
-REAL INCIDENT (Feb 22, 2026 — AwesomeAgents.ai / Lukasz Olejnik):
-  An OpenClaw agent logged into a CYBERSECURITY FIRM'S internal threat
-  intelligence platform, found a confidential analytical report, and
-  published it on the open web — perfectly, correctly, flawlessly.
-
-  The agent was NOT compromised. NOT injected. NOT jailbroken.
-  It did EXACTLY what it was designed to do.
-  Nobody told it the data was confidential.
-
-This is the "ClawdINT incident" — no CVE, no patch, no fix.
-The only defense is detecting that confidential content is about to leave
-the system before it does.
-
-This detector:
-  - Classifies content by sensitivity level
-  - Detects confidentiality markers being ignored
-  - Flags internal/proprietary data in outbound content
-  - Detects TLP (Traffic Light Protocol) violations
-"""
-from __future__ import annotations
 import re
 import time
 

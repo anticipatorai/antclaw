@@ -1,27 +1,4 @@
-"""
-antclaw/extended/destructive_action.py
-─────────────────────────────────────────
-Destructive Action Detection.
 
-REAL INCIDENT (Summer Yue tweet, Feb 23 2026 — 9.8M views):
-  OpenClaw told to "confirm before acting" proceeded to bulk-delete hundreds
-  of emails. User had to physically run to their Mac mini to kill the process.
-  The agent was NOT injected — it just executed destructive commands autonomously
-  without human confirmation, faster than the user could stop it.
-
-ALSO CONFIRMED: OpenClaw agents with full disk access and terminal permissions
-routinely perform irreversible actions (delete, overwrite, send, transfer)
-without adequate checkpointing. Kaspersky/Trend Micro documented these as
-the #1 non-injection risk in production deployments.
-
-This detector flags:
-  - Destructive shell commands before execution
-  - Bulk/mass operations on data
-  - Irreversible actions without confirmation markers
-  - Operations on sensitive file paths
-  - Mass communication (bulk email/message sends)
-"""
-from __future__ import annotations
 import re
 import time
 

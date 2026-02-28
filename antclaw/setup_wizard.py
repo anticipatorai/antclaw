@@ -1,30 +1,7 @@
-#!/usr/bin/env python3
-"""
-antclaw/setup_wizard.py
-────────────────────────
-Interactive setup wizard — run once, protected forever.
-
-Usage:
-    antclaw-setup
-
-What it does automatically:
-    1. Checks antclaw is installed correctly
-    2. Finds OpenClaw's gateway URL (scans config files)
-    3. Finds a free port
-    4. Writes a .env config so you never type flags again
-    5. Starts the relay
-    6. Opens the live report in your browser
-
-Users never need to know about ports, URLs, or config files.
-"""
-
-from __future__ import annotations
-
 import json
 import os
 import pathlib
 import platform
-import shutil
 import socket
 import subprocess
 import sys

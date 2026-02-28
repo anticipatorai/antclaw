@@ -1,29 +1,7 @@
-"""
-antclaw/extended/credential_leak.py
-──────────────────────────────────────
-Credential & Sensitive Data Leak Detection.
 
-REAL INCIDENT (Kaspersky/Malwarebytes confirmed, Jan-Feb 2026):
-  - OpenClaw stores API keys, OAuth tokens, passwords in PLAIN TEXT in local
-    Markdown/config files. Infostealers (Vidar, RedLine, Lumma, AMOS) now have
-    OpenClaw file paths hardcoded in their must-steal lists.
-  - Hudson Rock confirmed first case of infostealer stealing a complete
-    OpenClaw "identity" — API keys, Telegram tokens, Slack OAuth, chat history.
-  - Moltbook database exposed 35,000 email addresses + 1.5M agent API tokens.
-  - Researcher Jamieson O'Reilly accessed Anthropic API keys, Telegram bot
-    tokens, Slack accounts from exposed instances with no auth.
-
-This detector scans content that the agent is about to:
-  - Write to disk
-  - Send via ACP/tool call
-  - Output as a response
-  - Store in memory
-
-...for credentials that should never leave the local system.
-"""
-from __future__ import annotations
 import re
 import time
+
 
 # ── Credential patterns ───────────────────────────────────────────────────────
 
