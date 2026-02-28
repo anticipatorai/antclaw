@@ -1,4 +1,3 @@
-import importlib
 import json
 import os
 import pathlib
@@ -91,7 +90,7 @@ def check_installation() -> bool:
     try:
         import importlib.util
         if importlib.util.find_spec("websockets"):
-            ok(f"websockets installed ✓")
+            ok("websockets installed ✓")
     except ImportError:
         warn("websockets not installed — installing now...")
         try:
@@ -350,7 +349,7 @@ def open_report() -> None:
     report_url = _REPORT_HTML.resolve().as_uri()
     try:
         webbrowser.open(report_url)
-        ok(f"Report opened in browser ✓")
+        ok("Report opened in browser ✓")
         info(f"URL: {_c(report_url, CYAN)}")
         info("The report auto-refreshes every 10 seconds — leave it open")
     except Exception:
@@ -375,7 +374,7 @@ def print_final_instructions(port: int, gateway: str) -> None:
     print()
     print(_c("  One thing left to do:", BOLD))
     print()
-    print(f"  In OpenClaw settings, change the gateway URL to:")
+    print("  In OpenClaw settings, change the gateway URL to:")
     print()
     print(f"    {_c(f'ws://127.0.0.1:{port}', BOLD + CYAN)}")
     print()
@@ -384,14 +383,14 @@ def print_final_instructions(port: int, gateway: str) -> None:
     _divider()
     print()
     print(_c("  How it works:", BOLD))
-    print(f"  OpenClaw → antclaw relay → real OpenClaw gateway")
-    print(f"  Every message scanned automatically. Nothing blocked.")
+    print("  OpenClaw → antclaw relay → real OpenClaw gateway")
+    print("  Every message scanned automatically. Nothing blocked.")
     print()
     print(_c("  To stop antclaw:", BOLD))
-    print(f"  Press Ctrl+C in this window")
+    print("  Press Ctrl+C in this window")
     print()
     print(_c("  To start again later:", BOLD))
-    print(f"  antclaw-server   (reads .env automatically)")
+    print("  antclaw-server   (reads .env automatically)")
     print()
     _divider()
     print()

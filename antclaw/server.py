@@ -996,7 +996,7 @@ def main() -> None:
 
     print(f"  report HTML    :  {args.report_html}  (auto-refreshes every 10s)")
     print("  report JSON    :  " + str(args.report_json))
-    print(f"  Open the report once and leave it open — it updates automatically.")
+    print("  Open the report once and leave it open — it updates automatically.")
     print()
 
     server.run(
